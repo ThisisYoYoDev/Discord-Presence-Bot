@@ -1,0 +1,4 @@
+presence_*.csv
+.git
+node_modules
+log/*.csv
