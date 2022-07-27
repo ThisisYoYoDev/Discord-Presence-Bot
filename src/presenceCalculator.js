@@ -10,11 +10,11 @@ function presenceCalculator(startedTime, endedTime, channelId) {
         if (line.channel == channelId || line.to == channelId || line.from == channelId) {
             if (line.time >= startedTime && line.time <= endedTime) {
                 if (line.type == "joined" || (line.type == "switch" && line.to == channelId)) {
-                    presence[j] = { user: line.user, type: "joined", time: line.time };
+                    presence[j] = { user: line.user, nickname: line.nickname, type: "joined", time: line.time };
                     j++;
                 }
                 if (line.type == "leave" || (line.type == "switch" && line.from == channelId)) {
-                    presence[j] = { user: line.user, type: "leave", time: line.time };
+                    presence[j] = { user: line.user, nickname: line.nickname, type: "leave", time: line.time };
                     j++;
                 }
             }
@@ -26,7 +26,7 @@ function presenceCalculator(startedTime, endedTime, channelId) {
         let type = presence[i].type;
         // add the user to the list if he is not already in it
         if (!timeSpendperUser.some(e => e.user == user)) {
-            timeSpendperUser.push({ user: user, time: 0 });
+            timeSpendperUser.push({ user: user, nickname: presence[i].nickname, time: 0 });
         }
         // add the time spend by the user
         if (type == "joined") {

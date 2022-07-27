@@ -1,5 +1,5 @@
-./config/config.json
-./config/db.json
-./log/
-./node_modules/
+config/config.json
+config/db.json
+log/
+node_modules/
 package-lock.json
