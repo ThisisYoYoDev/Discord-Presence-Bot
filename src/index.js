@@ -35,6 +35,18 @@ client.on('interactionCreate', async interaction => {
     const { commandName } = interaction;
 
     if (commandName === 'presence') {
+
+        // if (fs.existsSync("./config/db.json")) {
+        //     const db = fs.readFileSync("./config/db.json", "utf-8");
+        //     for (let i = 0; i < db.length - 1; i++) {
+        //         let line = JSON.parse(db[i]);
+        //         if (line.type === 'StartedTimeRequest') {
+        //             await interaction.reply("There is already a started time request. Please wait for it to finish.");
+        //             return;
+        //         }
+        //     }
+        // }
+
         const stopButton = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -91,7 +103,7 @@ client.on('interactionCreate', async interaction => {
     // create name with uuid
     const name = './log/presence_' + uuidv4() + '.csv';
     fs.writeFileSync(name, csv);
-    interaction.reply({ content: 'Analysis finished', files: [name] });
+    interaction.update({ content: 'Analysis finished', files: [name] , components: []});
 });
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
