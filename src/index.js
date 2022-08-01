@@ -100,13 +100,13 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
     if (oldUserChannel === null && newUserChannel !== null) {
         // User Join a voice channel
-        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'joined', user: newState.member.user.username + "#" + newState.member.user.discriminator, nickname: member.displayName, channel: newUserChannel.id, time: new Date(moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')).getTime() / 1000 }) + "\n");
+        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'joined', user: newState.member.user.username + "#" + newState.member.user.discriminator, nickname: newState.member.displayName, channel: newUserChannel.id, time: new Date(moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')).getTime() / 1000 }) + "\n");
     } else if (oldUserChannel !== null && newUserChannel === null) {
         // User Leave a voice channel
-        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'leave', user: newState.member.user.username + "#" + newState.member.user.discriminator, nickname: member.displayName, channel: oldUserChannel.id, time: new Date(moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')).getTime() / 1000 }) + "\n");
+        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'leave', user: newState.member.user.username + "#" + newState.member.user.discriminator, nickname: newState.member.displayName, channel: oldUserChannel.id, time: new Date(moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')).getTime() / 1000 }) + "\n");
     } else if (oldUserChannel !== null && newUserChannel !== null && oldUserChannel.id != newUserChannel.id) {
         // User Switch a voice channel
-        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'switch', user: newState.member.user.username + "#" + newState.member.user.discriminator, nickname: member.displayName, from: oldUserChannel.id, to: newUserChannel.id, time: new Date(moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')).getTime() / 1000 }) + "\n");
+        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'switch', user: newState.member.user.username + "#" + newState.member.user.discriminator, nickname: newState.member.displayName, from: oldUserChannel.id, to: newUserChannel.id, time: new Date(moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')).getTime() / 1000 }) + "\n");
     }
 });
 
