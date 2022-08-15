@@ -36,16 +36,16 @@ client.on('interactionCreate', async interaction => {
 
     if (commandName === 'presence') {
 
-        // if (fs.existsSync("./config/db.json")) {
-        //     const db = fs.readFileSync("./config/db.json", "utf-8");
-        //     for (let i = 0; i < db.length - 1; i++) {
-        //         let line = JSON.parse(db[i]);
-        //         if (line.type === 'StartedTimeRequest') {
-        //             await interaction.reply("There is already a started time request. Please wait for it to finish.");
-        //             return;
-        //         }
-        //     }
-        // }
+        if (fs.existsSync("./config/db.json")) {
+            const db = fs.readFileSync("./config/db.json", "utf-8").split("\n");
+            for (let i = 0; i < db.length - 1; i++) {
+                let line = JSON.parse(db[i]);
+                if (line.type === 'StartedTimeRequest') {
+                    await interaction.reply("There is already a started time request. Please wait for it to finish.");
+                    return;
+                }
+            }
+        }
 
         const stopButton = new ActionRowBuilder()
             .addComponents(
@@ -57,13 +57,14 @@ client.on('interactionCreate', async interaction => {
         // create a button to stop the analysis
         const started = moment.tz('Europe/Madrid').format('YYYY-MM-DD HH:mm:ss')
         const destinationChannel = interaction.options.getChannel('destination');
+        const roleId = interaction.options.getRole('role');
         await interaction.reply({ content: 'Analysis in progress on channel ' + destinationChannel.name + ' at ' + started, components: [stopButton] });
 
         const members = await destinationChannel.members;
         members.forEach(member => {
             fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'joined', user: member.user.username + '#' + member.user.discriminator, nickname: member.displayName, channel: destinationChannel.id, time: new Date(started).getTime() / 1000 }) + "\n");
         });
-        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'StartedTimeRequest', channel: destinationChannel.id, time: new Date(started).getTime() / 1000 }) + "\n");
+        fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'StartedTimeRequest', role: roleId.id, channel: destinationChannel.id, time: started }) + "\n");
     }
 });
 
@@ -77,33 +78,57 @@ client.on('interactionCreate', async interaction => {
     let startedTime = 0;
     let channelId = 0;
     let index = 0;
+    let checkStart = false;
+    let role = 0;
     for (let i = 0; i < lines.length - 1; i++) {
         let line = JSON.parse(lines[i]);
         if (line.type == 'StartedTimeRequest') {
             startedTime = line.time;
             channelId = line.channel;
             index = i;
+            checkStart = true;
+            role = line.role;
             break;
         }
     }
+
+    if (!checkStart) {
+        await interaction.update({ content: "There is no started time request.", files: [], components: [] });
+        return;
+    }
+
     lines.splice(index, 1);
     fs.writeFileSync("./config/db.json", lines.join("\n"));
 
-
     // get channel from id
+    const membersRoles = interaction.guild.roles.cache.get(role).members.map(member => member.user.username + '#' + member.user.discriminator);
+    const getTimeOfRequestInSecond = (new Date(end).getTime() / 1000) - (new Date(startedTime).getTime() / 1000);
     const channel = client.channels.cache.get(channelId);
     const members = await channel.members;
     members.forEach(member => {
         fs.appendFileSync("./config/db.json", JSON.stringify({ type: 'leave', user: member.user.username + '#' + member.user.discriminator, nickname: member.displayName, channel: channelId, time: new Date(end).getTime() / 1000 }) + "\n");
     });
 
-    const timeSpendperUser = presenceCalculator(startedTime, new Date(end).getTime() / 1000, channelId);
-    // create a csv file with the results
-    const csv = timeSpendperUser.map(user => "name, " + user.user +  ", nickname, " + user.nickname + ", timeSpendInSecond, " + user.time).join("\n");
+    const timeSpendperUser = presenceCalculator((new Date(startedTime).getTime() / 1000), new Date(end).getTime() / 1000, channelId);
+    const csv = timeSpendperUser.map(user => {
+        if (!(user.time / getTimeOfRequestInSecond > 0.25)) {
+            return "name" + ": " + user.user + "; " + "nickname" + ": " + user.nickname + "; " + "timeSpendInSecond" + ": " + user.time + "; " + "status: absent";
+        } else {
+            return "name" + ": " + user.user + "; " + "nickname" + ": " + user.nickname + "; " + "timeSpendInSecond" + ": " + user.time + "; " + "status: present";
+        }
+    }).join('\n');
+
+    const notInTimeSpendperUser = membersRoles.filter(user => !timeSpendperUser.some(user2 => user2.user === user));
+    const csv2 = notInTimeSpendperUser.map(user => {
+        const userId = client.users.cache.find(user2 => user2.username === user.split('#')[0] && user2.discriminator === user.split('#')[1]).id;
+        const displayName = interaction.guild.members.cache.find(member => member.id === userId).displayName;
+        return "name" + ": " + user + "; " + "nickname" + ": " + displayName + "; " + "status: absent";
+    }).join('\n');
+
     // create name with uuid
     const name = './log/presence_' + uuidv4() + '.csv';
-    fs.writeFileSync(name, csv);
-    interaction.update({ content: 'Analysis finished', files: [name] , components: []});
+    fs.writeFileSync(name, csv + '\n' + csv2);
+    interaction.update({ content: 'Analysis Finished:\nStarting Time at ' + startedTime + ' \nEnd Time at ' + end + '\n' + 'Time of request in seconds: ' + getTimeOfRequestInSecond + 's' + " (" + (getTimeOfRequestInSecond / 60).toPrecision(1) + "minutes)", files: [name], components: [] });
 });
 
 client.on('voiceStateUpdate', async (oldState, newState) => {

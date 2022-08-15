@@ -14,6 +14,11 @@ const commands = [
 				.addChannelTypes(13)
 				.setRequired(true)
 		)
+		.addRoleOption(option =>
+			option.setName('role')
+				.setDescription('Select a role')
+				.setRequired(true)
+		)
 ]
 	.map(command => command.toJSON());
 
