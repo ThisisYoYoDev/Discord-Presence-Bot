@@ -80,7 +80,8 @@ client.on('interactionCreate', async interaction => {
     let index = 0;
     let checkStart = false;
     let role = 0;
-    for (let i = 0; i < lines.length - 1; i++) {
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i] === "") continue;
         let line = JSON.parse(lines[i]);
         if (line.type == 'StartedTimeRequest') {
             startedTime = line.time;
@@ -128,7 +129,7 @@ client.on('interactionCreate', async interaction => {
     // create name with uuid
     const name = './log/presence_' + uuidv4() + '.csv';
     fs.writeFileSync(name, csv + '\n' + csv2);
-    interaction.update({ content: 'Analysis Finished:\nStarting Time at ' + startedTime + ' \nEnd Time at ' + end + '\n' + 'Time of request in seconds: ' + getTimeOfRequestInSecond + 's' + " (" + (getTimeOfRequestInSecond / 60).toPrecision(1) + "minutes)", files: [name], components: [] });
+    interaction.update({ content: 'Analysis Finished (' + channel.name + '):\nStarting Time at ' + startedTime + ' \nEnd Time at ' + end + '\n' + 'Time of request in seconds: ' + getTimeOfRequestInSecond + 's' + " (" + (getTimeOfRequestInSecond / 60).toPrecision(1) + "minutes)", files: [name], components: [] });
 });
 
 client.on('voiceStateUpdate', async (oldState, newState) => {

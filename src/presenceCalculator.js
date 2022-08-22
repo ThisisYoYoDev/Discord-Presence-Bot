@@ -4,7 +4,8 @@ function presenceCalculator(startedTime, endedTime, channelId) {
     let presence = [];
     let j = 0;
     let lines = fs.readFileSync("./config/db.json", "utf-8").split("\n");
-    for (let i = 0; i < lines.length - 1; i++) {
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i] === "") continue;
         let line = JSON.parse(lines[i]);
         if (line.type == 'StartedTimeRequest') continue;
         if (line.channel == channelId || line.to == channelId || line.from == channelId) {
@@ -43,3 +44,5 @@ function presenceCalculator(startedTime, endedTime, channelId) {
 }
 
 module.exports = presenceCalculator;
+
+presenceCalculator(1, 1 + 3600, "694595069386424411");
